@@ -34,7 +34,7 @@ Vagrant.configure("2") do |config|
           #  "master_ip" => MASTER_IP
           #}
           ansible.groups = {
-            "storagenodes" => (0..STORAGENODES-1).map {|j| "storage#{j}"}
+            "gluster-servers" => (0..STORAGENODES-1).map {|j| "gluster-#{j}"}
           }
           ansible.limit = "all"
           ansible.playbook = "playbooks/ping.yml"
