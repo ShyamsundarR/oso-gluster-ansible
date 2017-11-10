@@ -1,0 +1,16 @@
+---
+# vim: set ts=2 sw=2 et :
+
+- name: Install Gluster client packages
+  package:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+  - glusterfs-api
+  - glusterfs-fuse
+
+- name: Adjust SELinux to allow gluster/fuse
+  seboolean:
+    name: virt_sandbox_use_fusefs
+    persistent: yes
+    state: yes

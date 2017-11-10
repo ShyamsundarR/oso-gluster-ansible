@@ -1,0 +1,11 @@
+---
+# vim: set ts=2 sw=2 et :
+
+- name: Start Glusterd server
+  systemd:
+    name: glusterd
+    state: started
+
+# TODO: Start all volumes that we stopped earlier
+
+# TODO: Mount /var/run/gluster/shared_storage (if it should be mounted)

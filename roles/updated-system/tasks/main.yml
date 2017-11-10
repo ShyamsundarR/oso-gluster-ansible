@@ -1,0 +1,7 @@
+---
+# vim: set ts=2 sw=2 et :
+
+- name: Upgrade host to latest version
+  package:
+    name: "*"
+    state: latest

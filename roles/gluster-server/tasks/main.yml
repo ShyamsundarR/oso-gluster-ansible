@@ -1,0 +1,47 @@
+---
+# vim: set ts=2 sw=2 et :
+
+- name: Install libsemanage-python to manage SELinux
+  package:
+    name: libsemanage-python
+    state: latest
+
+- name: Enable CentOS Storage SIG Gluster repo
+  package:
+    name: centos-release-gluster312
+    state: latest
+
+- name: Install Gluster server packages
+  package:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+  - glusterfs
+  - glusterfs-cli
+  - glusterfs-server
+
+# Need to configure iptables here
+
+  # Fix problem where rpcbind won't start w/ disabled IPv6
+  # https://bugzilla.redhat.com/show_bug.cgi?id=1402961
+- name: Rebuild initramfs
+  command: dracut -f
+
+  # Fix problem where rpcbind won't start first time
+  # https://bugzilla.redhat.com/show_bug.cgi?id=1474593
+- name: Temporarily switch SELinux to Permissive
+  selinux:
+    policy: targeted
+    state: permissive
+
+- name: Enable & start Gluster
+  systemd:
+    daemon_reload: yes
+    name: glusterd
+    enabled: yes
+    state: started
+
+- name: Switch SELinux back to Enforcing
+  selinux:
+    policy: targeted
+    state: enforcing

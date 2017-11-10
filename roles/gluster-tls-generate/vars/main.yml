@@ -1,0 +1,3 @@
+keyfile: /etc/ssl/glusterfs.key
+csrfile: /etc/ssl/glusterfs.csr
+pemfile: /etc/ssl/glusterfs.pem

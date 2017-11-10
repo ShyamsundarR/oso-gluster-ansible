@@ -1,0 +1,44 @@
+---
+# vim: set ts=2 sw=2 et :
+
+- name: Make sure OpenSSL is installed
+  package:
+    name: openssl
+    state: latest
+
+- name: Create private key
+  command: openssl genrsa -out {{ keyfile }} 2048
+  args:
+    creates: "{{ keyfile }}"
+
+- name: Create signing request (CSR)
+  command: openssl req -new -sha256 -key {{ keyfile }} -subj "/CN={{ ansible_nodename }}" -days {{ GLUSTER_KEY_VALID_DAYS }} -out {{ csrfile }}
+  args:
+    creates: "{{ csrfile }}"
+
+- name: Retrieve CSRs from all machines
+  fetch:
+    src: "{{ csrfile }}"
+    dest: "{{ hostvars.localhost.tempdir }}/{{ ansible_nodename }}.csr"
+    flat: yes
+
+- name: Sign CSRs
+  local_action: command openssl x509 -req -in {{ hostvars.localhost.tempdir }}/{{ ansible_nodename }}.csr -CA {{ GLUSTER_CA_FILE_BASE }}.pem -CAkey {{ GLUSTER_CA_FILE_BASE }}.key -CAcreateserial -out {{ hostvars.localhost.tempdir }}/{{ ansible_nodename }}.pem -days {{ GLUSTER_KEY_VALID_DAYS }}
+  args:
+    creates: "{{ hostvars.localhost.tempdir }}/{{ ansible_nodename }}.pem"
+
+- name: Set mode for certs
+  local_action:
+    module: file
+    path: "{{ hostvars.localhost.tempdir }}/{{ ansible_nodename }}.pem"
+    mode: 0644
+
+- name: Copy back signed certs
+  copy:
+    src: "{{ hostvars.localhost.tempdir }}/{{ ansible_nodename }}.pem"
+    dest: "{{ pemfile }}"
+
+- name: Copy CA cert to all machines
+  copy:
+    src: "{{ GLUSTER_CA_FILE_BASE }}.pem"
+    dest: /etc/ssl/glusterfs.ca

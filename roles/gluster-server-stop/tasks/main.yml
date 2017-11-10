@@ -1,0 +1,15 @@
+---
+# vim: set ts=2 sw=2 et :
+
+# TODO: Unmount /var/run/gluster/shared_storage (if mounted)
+
+# TODO: Stop all volumes
+
+- name: Stop Glusterd server
+  systemd:
+    name: glusterd
+    state: stopped
+
+- name: Kill remaining Gluster daemons
+  command: pkill glusterfs
+  ignore_errors: yes
