@@ -26,3 +26,13 @@
     file:
       path: "{{ hostvars.localhost.tempdir }}"
       state: absent
+
+  # Use the 1st storage node to establish the cluster
+- name: Initialize Gluster TSP
+  hosts: "{{ groups['gluster-servers'][0] }}"
+  become: true
+  tasks:
+    - name: Establish TSP
+      # Make sure we use Amazon's internal fqdn for the servers
+      command: gluster peer probe {{ hostvars[item]['ansible_fqdn'] }}
+      with_items: "{{ groups['gluster-servers'] }}"
