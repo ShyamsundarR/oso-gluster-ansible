@@ -6,6 +6,7 @@
     name: "{{ item }}"
     state: latest
   with_items:
+  - glusterfs
   - glusterfs-api
   - glusterfs-fuse
 
