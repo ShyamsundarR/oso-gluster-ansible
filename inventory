@@ -1,7 +1,14 @@
 # Gluster servers that should be installed/configured
 [gluster-servers]
+ec2-18-221-103-18.us-east-2.compute.amazonaws.com
 
-ec2-18-217-2-32.us-east-2.compute.amazonaws.com
+
+# Gluster server used for admin operations
+# This should be an existing cluster member if new servers should
+# join an existing TSP.
+# This group should contain EXACTLY one host!
+[gluster-master]
+ec2-18-221-103-18.us-east-2.compute.amazonaws.com
 
 
 

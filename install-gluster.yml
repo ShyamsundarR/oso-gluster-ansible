@@ -29,7 +29,7 @@
 
   # Use the 1st storage node to establish the cluster
 - name: Initialize Gluster TSP
-  hosts: "{{ groups['gluster-servers'][0] }}"
+  hosts: "{{ groups['gluster-master'][0] }}"
   become: true
   tasks:
     - name: Establish TSP
