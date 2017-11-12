@@ -1,0 +1,49 @@
+---
+# vim: set ts=2 sw=2 et :
+
+- name: Check for required variables
+  fail: msg="Variable {{ item }} must be defined to use this role"
+  when: item not in vars
+  with_items:
+  - brick_device
+  - brick_name
+  - brick_size
+
+- name: Create volume group
+  lvg:
+    pvs: "{{ brick_device }}"
+    vg: "{{ brick_name }}"
+
+- name: Create thin pool
+  command: lvcreate --thin {{ brick_name }}/pool -l 100%FREE --chunksize 256k --poolmetadatasize 16G --zero n
+  args:
+    creates: /dev/mapper/{{ brick_name }}-pool
+
+- name: Create brick LV
+  command: lvcreate --thin --name {{ brick_name }} --virtualsize {{ brick_size }} {{ brick_name }}/pool
+  args:
+    creates: /dev/mapper/{{ brick_name }}-{{ brick_name }}
+
+- name: Create brick file system
+  filesystem:
+    dev: /dev/mapper/{{ brick_name }}-{{ brick_name }}
+    fstype: xfs
+    opts: -i size=512
+
+- name: Create brick mount directory
+  file:
+    path: /bricks/{{ brick_name }}
+    state: directory
+
+- name: Mount brick
+  mount:
+    fstype: xfs
+    opts: inode64
+    path: /bricks/{{ brick_name }}
+    src: /dev/mapper/{{ brick_name }}-{{ brick_name }}
+    state: mounted
+
+- name: Create brick root directory
+  file:
+    path: /bricks/{{ brick_name }}/brick
+    state: directory

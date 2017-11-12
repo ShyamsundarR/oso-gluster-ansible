@@ -1,0 +1,24 @@
+# vim: set ts=2 sw=2 et :
+---
+
+- name: Make Gluster brick
+  hosts: gluster-servers
+  become: true
+  vars:
+  - brick_device: '/dev/xvdb'
+  - brick_name: 'supervol0'
+  - brick_size: '1T'
+  roles:
+  - make-brick
+
+- name: Create volume
+  hosts: "{{ groups['gluster-master'][0] }}"
+  become: true
+  vars:
+  - brick_name: 'supervol0'
+  tasks:
+  - name: Create volume
+    command: "gluster volume create {{ brick_name }} replica 3 {{ groups['gluster-servers'] | map('extract', hostvars, 'ansible_fqdn') | map('regex_replace', '(.+)', '\\1:/bricks/XXXXX/brick') | map('regex_replace', 'XXXXX', brick_name) | join (' ') }}"
+
+  - name: Start volume
+    command: gluster volume start {{ brick_name }}
