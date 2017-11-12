@@ -20,5 +20,11 @@
   - name: Create volume
     command: "gluster volume create {{ brick_name }} replica 3 {{ groups['gluster-servers'] | map('extract', hostvars, 'ansible_fqdn') | map('regex_replace', '(.+)', '\\1:/bricks/XXXXX/brick') | map('regex_replace', 'XXXXX', brick_name) | join (' ') }}"
 
+  - name: Enable data encryption (client)
+    command: gluster volume set {{ brick_name }} client.ssl on
+
+  - name: Enable data encryption (server)
+    command: gluster volume set {{ brick_name }} server.ssl on
+
   - name: Start volume
     command: gluster volume start {{ brick_name }}
