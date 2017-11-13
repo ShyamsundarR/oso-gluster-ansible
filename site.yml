@@ -25,12 +25,30 @@
   - prepare-gluster-ca
 
 
-- name: "Configure Gluster: region=us-east-2, cluster=0, group=0"
-  hosts: tag_gluster_server,&us-east-2,&tag_cluster_0,&tag_group_0
+- name: Install Gluster on servers
+  hosts: tag_gluster_server
   become: true
   roles:
   - gluster-server
-    #- { role: gluster-volume, name: 'supervol0', size: '1T', device: '/dev/xdb' }
+
+
+- name: "Configure TSP: region=us-east-2, cluster=0"
+  hosts: tag_gluster_server,&us-east-2,&tag_cluster_0,&tag_manager_true
+  become: true
+  tasks:
+  - name: Establish TSP
+    # Make sure we use Amazon's internal fqdn for the servers
+    command: gluster peer probe {{ hostvars[item]['ansible_fqdn'] }}
+    with_items: "{{ groups['tag_gluster_server'] |
+                    intersect(groups['us-east-2']) |
+                    intersect(groups['tag_cluster_0'])}}"
+
+
+#- name: "Configure volumes: region=us-east-2, cluster=0, group=0"
+#  hosts: tag_gluster_server,&us-east-2,&tag_cluster_0,&tag_group_0
+#  become: true
+#  roles:
+#    #- { role: gluster-volume, name: 'supervol0', size: '1T', device: '/dev/xdb' }
 
 
 - name: Clean up local TLS files
