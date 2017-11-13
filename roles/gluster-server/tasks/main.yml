@@ -1,36 +1,80 @@
 ---
 # vim: set ts=2 sw=2 et :
 
-- name: Install libsemanage-python to manage SELinux
-  package:
-    name: libsemanage-python
-    state: latest
-
 - name: Install Gluster server packages
   package:
     name: redhat-storage-server
     state: latest
   register: rhgs_updated
 
-- name: Reboot if packages were updated
-  include_role:
-    name: reboot-system
-  when: rhgs_updated.changed == true
+- name: Check for TLS certificate
+  stat:
+    path: "{{ pemfile }}"
+  register: pemcheck
 
-# Need to configure iptables here
-# iptables default is open
+- when: pemcheck.stat.exists == false
+  block:
+  - name: Make sure OpenSSL is installed
+    package:
+      name: openssl
+      state: latest
 
-  # Fix problem where rpcbind won't start w/ disabled IPv6
-  # https://bugzilla.redhat.com/show_bug.cgi?id=1402961
-#- name: Rebuild initramfs
-#  command: dracut -f
+  - name: Create private key
+    command: openssl genrsa -out {{ keyfile }} 2048
+    args:
+      creates: "{{ keyfile }}"
 
-  # Fix problem where rpcbind won't start first time
-  # https://bugzilla.redhat.com/show_bug.cgi?id=1474593
-#- name: Temporarily switch SELinux to Permissive
-#  selinux:
-#    policy: targeted
-#    state: permissive
+  - name: Create signing request (CSR)
+    command: "openssl req -new -sha256
+                -key {{ keyfile }}
+                -subj '/CN={{ ansible_nodename }}'
+                -days {{ GLUSTER_KEY_VALID_DAYS }}
+                -out {{ csrfile }}"
+    args:
+      creates: "{{ csrfile }}"
+
+  - name: Retrieve CSRs from all machines
+    fetch:
+      src: "{{ csrfile }}"
+      dest: "{{ hostvars.localhost.tempdir }}/{{ ansible_nodename }}.csr"
+      flat: yes
+
+  - name: Sign CSRs
+    local_action: "command openssl x509 -req
+                     -in {{ hostvars.localhost.tempdir }}/{{ ansible_nodename }}.csr
+                     -CA {{ GLUSTER_CA_FILE_BASE }}.pem
+                     -CAkey {{ GLUSTER_CA_FILE_BASE }}.key
+                     -CAcreateserial
+                     -out {{ hostvars.localhost.tempdir }}/{{ ansible_nodename }}.pem
+                     -days {{ GLUSTER_KEY_VALID_DAYS }}"
+    args:
+      creates: "{{ hostvars.localhost.tempdir }}/{{ ansible_nodename }}.pem"
+
+  - name: Set mode for certs
+    local_action:
+      module: file
+      path: "{{ hostvars.localhost.tempdir }}/{{ ansible_nodename }}.pem"
+      mode: 0644
+
+  - name: Copy back signed certs
+    copy:
+      src: "{{ hostvars.localhost.tempdir }}/{{ ansible_nodename }}.pem"
+      dest: "{{ pemfile }}"
+
+- name: Copy CA cert to all machines
+  copy:
+    src: "{{ GLUSTER_CA_FILE_BASE }}.pem"
+    dest: /etc/ssl/glusterfs.ca
+
+- name: Make sure /var/lib/glusterd exists
+  file:
+    path: /var/lib/glusterd/
+    state: directory
+
+- name: Enable management TLS
+  copy:
+    content: ""
+    dest: /var/lib/glusterd/secure-access
 
 - name: Enable & start Gluster
   systemd:
@@ -38,8 +82,3 @@
     name: glusterd
     enabled: yes
     state: started
-
-#- name: Switch SELinux back to Enforcing
-#  selinux:
-#    policy: targeted
-#    state: enforcing

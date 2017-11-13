@@ -1,0 +1,6 @@
+# Basename of the CA file for Gluster TLS (base.key, base.pem)
+# Will be created if it doesn't exist
+GLUSTER_CA_FILE_BASE: "gluster_ca"
+
+# Number of days CA and host keys should be valid
+GLUSTER_KEY_VALID_DAYS: "3650"

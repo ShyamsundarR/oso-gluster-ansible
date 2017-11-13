@@ -1,0 +1,50 @@
+# vim: set ts=2 sw=2 et :
+---
+########################################
+# This file declares the desired configuration of the Gluster cluster(s)
+#
+# Server organization:
+# - A Gluster cluster is contained entirely within a region.
+# - Each region may have more than 1 cluster
+# - Nodes within a cluster are divided into groups
+# - Each group has 3 total servers, each of which is in a different AZ
+# - Volumes are constructed from a group of servers (replica=3)
+#
+# Required tags:
+# For this playbook to function properly, the ec2 instances need to have the
+# following tags applied to them:
+#   gluster: server
+#   cluster: <cluster #>
+#   group:   <group #>
+
+
+- name: Prepare Gluster TLS CA
+  hosts: localhost
+  become: false
+  roles:
+  - prepare-gluster-ca
+
+
+- name: "Configure Gluster: region=us-east-2, cluster=0, group=0"
+  hosts: tag_gluster_server,&us-east-2,&tag_cluster_0,&tag_group_0
+  become: true
+  roles:
+  - gluster-server
+    #- { role: gluster-volume, name: 'supervol0', size: '1T', device: '/dev/xdb' }
+
+
+- name: Clean up local TLS files
+  hosts: localhost
+  become: false
+  tasks:
+  - name: Clean up local temp directory
+    file:
+      path: "{{ hostvars.localhost.tempdir }}"
+      state: absent
+
+
+# Need to add managed reboot sequence here
+# Reboot by AZ, ensuring hosts are up & healed before each reboot
+# Conditions:
+#   when: rhgs_updated.changed == true
+
