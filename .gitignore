@@ -1,2 +1,3 @@
 *.retry
 gluster_ca.*
+.vagrant
