@@ -7,6 +7,13 @@
     state: latest
   register: rhgs_updated
 
+- name: Open firewall for Gluster
+  firewalld:
+    service: glusterfs
+    state: enabled
+    immediate: true
+    permanent: true
+
 - name: Check for TLS certificate
   stat:
     path: "{{ pemfile }}"
