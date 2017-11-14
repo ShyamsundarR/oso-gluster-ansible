@@ -33,6 +33,7 @@
   become: true
   roles:
   - gluster-server
+  - gluster-client
 
 
 - name: Clean up local TLS files
