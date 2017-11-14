@@ -46,7 +46,7 @@
       state: absent
 
 
-- import_playbook: gluster-volume.yml
+- import_playbook: playbooks/gluster-volume.yml
   vars:
     cluster: "{{ groups['tag_gluster_server'] |
                  intersect(groups['us-east-2']) |
