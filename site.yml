@@ -54,7 +54,7 @@
     command: gluster peer probe {{ hostvars[item]['ansible_fqdn'] }}
     with_items: "{{ groups['tag_gluster_server'] |
                     intersect(groups['us-east-2']) |
-                    intersect(groups['tag_cluster_0'])}}"
+                    intersect(groups['tag_cluster_0']) }}"
 
 
 - import_playbook: gluster-volume.yml
