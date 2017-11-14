@@ -46,31 +46,19 @@
       state: absent
 
 
-- name: "Configure TSP: region=us-east-2, cluster=0"
-  hosts: tag_gluster_server,&us-east-2,&tag_cluster_0,&tag_manager_true
-  become: true
-  tasks:
-  - name: Establish TSP
-    # Make sure we use Amazon's internal fqdn for the servers
-    command: gluster peer probe {{ hostvars[item]['ansible_fqdn'] }}
-    with_items: "{{ groups['tag_gluster_server'] |
-                    intersect(groups['us-east-2']) |
-                    intersect(groups['tag_cluster_0']) }}"
-
-
 - import_playbook: gluster-volume.yml
   vars:
+    cluster: "{{ groups['tag_gluster_server'] |
+                 intersect(groups['us-east-2']) |
+                 intersect(groups['tag_cluster_0']) }}"
     volume_name: supervol0
     size: 1T
     device: /dev/xvdb
-    server_group: "{{ groups['tag_gluster_server'] |
-                    intersect(groups['us-east-2']) |
-                    intersect(groups['tag_cluster_0']) |
-                    intersect(groups['tag_group_0']) }}"
+    master: "{{ cluster | intersect(groups['tag_manager_true']) }}"
+    server_group: "{{ cluster | intersect(groups['tag_group_0']) }}"
 
 
 # Need to add managed reboot sequence here
 # Reboot by AZ, ensuring hosts are up & healed before each reboot
 # Conditions:
 #   when: rhgs_updated.changed == true
-

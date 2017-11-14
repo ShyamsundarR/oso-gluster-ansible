@@ -9,10 +9,11 @@
     fail: msg="Variable {{ item }} must be defined to use this playbook"
     when: item not in vars
     with_items:
-    - volume_name
-    - size
     - device
+    - master
     - server_group
+    - size
+    - volume_name
 
 
 - name: Make Gluster brick
@@ -65,23 +66,25 @@
       path: "/bricks/{{ volume_name }}/brick"
       state: directory
 
-
-
-- name: Create volume
-  hosts: "{{ server_group[0] }}"
-  become: true
-  tasks:
   - name: Create volume
-    command: "gluster volume create {{ volume_name }} replica 3
-              {{ server_group | map('extract', hostvars, 'ansible_fqdn') |
-                 map('regex_replace', '(.+)', '\\1:/bricks/XXXXX/brick') |
-                 map('regex_replace', 'XXXXX', volume_name) | join (' ') }}"
-
-  - name: Enable data encryption (client)
-    command: gluster volume set {{ volume_name }} client.ssl on
-
-  - name: Enable data encryption (server)
-    command: gluster volume set {{ volume_name }} server.ssl on
+    gluster_volume:
+      state: present
+      name: "{{ volume_name }}"
+      bricks: "/bricks/{{ volume_name }}/brick"
+      replicas: 3
+      start_on_create: no
+      options:
+        client.ssl: "on"
+        server.ssl: "on"
+      cluster: "{{ server_group |
+                   map('extract', hostvars, 'ansible_fqdn') |
+                   list }}"
+    run_once: true
+    delegate_to: "{{ master[0] }}"
 
   - name: Start volume
-    command: gluster volume start {{ volume_name }}
+    gluster_volume:
+      state: started
+      name: "{{ volume_name }}"
+    run_once: true
+    delegate_to: "{{ master[0] }}"
