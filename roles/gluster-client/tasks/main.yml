@@ -15,3 +15,6 @@
     name: virt_sandbox_use_fusefs
     persistent: yes
     state: yes
+
+- include_role:
+    name: gluster-enable-tls

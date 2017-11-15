@@ -33,6 +33,12 @@
   become: true
   roles:
   - gluster-server
+
+
+- name: Install Gluster client everywhere
+  hosts: all
+  become: true
+  roles:
   - gluster-client
 
 
