@@ -1,0 +1,2 @@
+# RHEL 7.4 AMI
+ansible_user: 'ec2-user'
