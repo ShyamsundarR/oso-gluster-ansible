@@ -1,11 +1,25 @@
 ---
 # vim: set ts=2 sw=2 et :
 
+- name: Enable repos
+  command: "subscription-manager repos --enable='{{ item }}'"
+  with_items:
+  - rhel-7-server-rpms
+  - rhel-7-server-extras-rpms
+  - rh-gluster-3-for-rhel-7-server-rpms
+
 - name: Install Gluster server packages
   package:
     name: redhat-storage-server
     state: latest
   register: rhgs_updated
+
+- name: Start firewalld
+  systemd:
+    daemon_reload: yes
+    name: firewalld
+    enabled: true
+    state: started
 
 - name: Open firewall for Gluster
   firewalld:
@@ -21,5 +35,5 @@
   systemd:
     daemon_reload: yes
     name: glusterd
-    enabled: yes
+    enabled: true
     state: started
