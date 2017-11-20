@@ -15,6 +15,7 @@
       username: "{{ rhsm_user }}"
       password: "{{ rhsm_pass }}"
       state: present
+      force_register: true
       # Employee sku
       pool_ids:
       - 8a85f9815ad3324a015ad3b083e545b3
