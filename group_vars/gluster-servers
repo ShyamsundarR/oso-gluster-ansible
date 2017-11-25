@@ -1,0 +1,14 @@
+# Defines the volumes exported by gluster
+gluster_volumes:
+  supervol00:
+    size: 499G
+    device: /dev/xvdb
+    group: tag_gluster-group_us-east-2-c00-g00
+  supervol01:
+    size: 500G
+    device: /dev/xvdc
+    group: tag_gluster-group_us-east-2-c00-g00
+  supervol02:
+    size: 501G
+    device: /dev/xvdb
+    group: tag_gluster-group_us-east-2-c00-g01

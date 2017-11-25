@@ -2,6 +2,5 @@
 
 ansible-playbook \
   -i .vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory \
-  -i vars.ini \
-  --ssh-common-args='-o StrictHostKeyChecking=no' \
+  -i inventory_groups \
   $*
