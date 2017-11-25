@@ -2,6 +2,16 @@
 ---
 
 - hosts: all
-  become: false
+  become: true
   tasks:
-  - ping:
+  # AWS attaches disks to /dev/xvd*, but vagrant /dev/vd*
+  # Synlinking allows us to use the same playbooks on both
+  - file:
+      src: "/dev/vd{{ item }}"
+      path: "/dev/xvd{{ item }}"
+      state: link
+    with_items:
+    - b
+    - c
+    - d
+    failed_when: false

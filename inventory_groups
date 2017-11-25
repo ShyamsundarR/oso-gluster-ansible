@@ -1,0 +1,4 @@
+# Server groups in the cluster
+[g-us-east-2-c00:children]
+tag_gluster-group_us-east-2-c00-g00
+tag_gluster-group_us-east-2-c00-g01
