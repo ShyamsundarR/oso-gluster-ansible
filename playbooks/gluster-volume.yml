@@ -1,90 +1,14 @@
 # vim: set ts=2 sw=2 et :
 ---
 
-- name: Validation
-  hosts: localhost
-  become: false
-  tasks:
-  - name: Check for required variables
-    fail: msg="Variable {{ item }} must be defined to use this playbook"
-    when: item not in vars
-    with_items:
-    - device
-    - master
-    - server_group
-    - size
-    - volume_name
-
-
-- name: Make Gluster brick
-  hosts: "{{ server_group }}"
+- hosts: gluster-servers
   become: true
+  any_errors_fatal: true
   tasks:
-  - name: Create volume group
-    lvg:
-      pvs: "{{ device }}"
-      vg: "{{ volume_name }}"
-
-  - name: Create thin pool
-    command: "lvcreate --thin {{ volume_name }}/pool
-                       -l 100%FREE
-                       --chunksize 256k
-                       --poolmetadatasize 16G
-                       --zero n"
-    args:
-      creates: "/dev/mapper/{{ volume_name }}-pool"
-
-  - name: Create brick LV
-    command: "lvcreate --thin
-                       --name {{ volume_name }}
-                       --virtualsize {{ size }}
-                       {{ volume_name }}/pool"
-    args:
-      creates: "/dev/mapper/{{ volume_name }}-{{ volume_name }}"
-
-  - name: Create brick file system
-    filesystem:
-      dev: "/dev/mapper/{{ volume_name }}-{{ volume_name }}"
-      fstype: xfs
-      opts: -i size=512
-
-  - name: Create brick mount directory
-    file:
-      path: "/bricks/{{ volume_name }}"
-      state: directory
-
-  - name: Mount brick
-    mount:
-      fstype: xfs
-      opts: inode64
-      path: /bricks/{{ volume_name }}
-      src: /dev/mapper/{{ volume_name }}-{{ volume_name }}
-      state: mounted
-
-  - name: Create brick root directory
-    file:
-      path: "/bricks/{{ volume_name }}/brick"
-      state: directory
-
-  - name: Create volume
-    gluster_volume:
-      state: present
-      name: "{{ volume_name }}"
-      bricks: "/bricks/{{ volume_name }}/brick"
-      replicas: 3
-      start_on_create: no
-      options:
-        client.ssl: "on"
-        server.ssl: "on"
-      cluster: "{{ server_group |
-                   map('extract', hostvars, 'ansible_fqdn') |
-                   list }}"
-    run_once: true
-    delegate_to: "{{ master[0] }}"
-
-  - name: Start volume
-    gluster_volume:
-      state: started
-      name: "{{ volume_name }}"
-    run_once: true
-    delegate_to: "{{ master[0] }}"
+  - include_role:
+      name: gluster-volume
+    with_items: "{{ gluster_volumes }}"
+    when: "gluster_volumes is defined and
+           inventory_hostname in groups[gluster_volumes[volume].group]"
+    loop_control:
+      loop_var: volume

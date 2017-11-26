@@ -25,16 +25,8 @@
 - import_playbook: playbooks/install-servers.yml
 
 
-#- import_playbook: playbooks/gluster-volume.yml
-#  vars:
-#    cluster: "{{ groups['tag_gluster_server'] |
-#                 intersect(groups['us-east-2']) |
-#                 intersect(groups['tag_cluster_0']) }}"
-#    volume_name: supervol0
-#    size: 1T
-#    device: /dev/xvdb
-#    master: "{{ cluster | intersect(groups['tag_manager_true']) }}"
-#    server_group: "{{ cluster | intersect(groups['tag_group_0']) }}"
+# Configure gluster volumes
+- import_playbook: playbooks/gluster-volume.yml
 
 
 # Need to add managed reboot sequence here

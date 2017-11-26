@@ -1,0 +1,136 @@
+- name: Make sure cluster_master is up
+  ping:
+  delegate_to: "{{ cluster_master }}"
+  run_once: true
+
+- name: Check for required variables
+  fail: msg="Variable {{ item }} must be defined to use this playbook"
+  #when: (item not in vars) or (item is undefined)
+  when: item is undefined
+  with_items:
+  - cluster_master
+  - volume
+  - gluster_volumes
+  - gluster_volumes[volume].device
+  - gluster_volumes[volume].group
+  - gluster_volumes[volume].size
+
+- set_fact:
+    device: "{{ gluster_volumes[volume].device }}"
+    size: "{{ gluster_volumes[volume].size }}"
+
+- name: Create volume group
+  lvg:
+    pvs: "{{ device }}"
+    vg: "{{ volume }}"
+
+- name: Create thin pool
+  command: "lvcreate --thin {{ volume }}/pool
+                     -l 100%FREE
+                     --chunksize 256k
+                     --poolmetadatasize 16G
+                     --zero n"
+  args:
+    creates: "/dev/mapper/{{ volume }}-pool"
+
+- name: Create brick LV
+  command: "lvcreate --thin
+                     --name {{ volume }}
+                     --virtualsize {{ size }}
+                     {{ volume }}/pool"
+  args:
+    creates: "/dev/mapper/{{ volume }}-{{ volume }}"
+
+- name: Create brick file system
+  filesystem:
+    dev: "/dev/mapper/{{ volume }}-{{ volume }}"
+    fstype: xfs
+    opts: -i size=512
+
+- name: Create brick mount directory
+  file:
+    path: "/bricks/{{ volume }}"
+    state: directory
+
+- name: Mount brick
+  mount:
+    fstype: xfs
+    opts: inode64
+    path: /bricks/{{ volume }}
+    src: /dev/mapper/{{ volume }}-{{ volume }}
+    state: mounted
+
+- name: Create brick root directory
+  file:
+    path: "/bricks/{{ volume }}/brick"
+    state: directory
+
+- run_once: true
+  delegate_to: "{{ cluster_master }}"
+  block:
+  - name: Create volume
+    gluster_volume:
+      state: present
+      name: "{{ volume }}"
+      bricks: "/bricks/{{ volume }}/brick"
+      replicas: 3
+      start_on_create: no
+      options:
+        client.ssl: "on"
+        server.ssl: "on"
+      cluster: "{{ groups[gluster_volumes[volume].group] |
+                   map('extract', hostvars, 'ansible_fqdn') |
+                   list }}"
+
+  - name: Start volume
+    gluster_volume:
+      state: started
+      name: "{{ volume }}"
+
+  - name: Set snapshot hard limit
+    shell: "echo y | gluster snapshot config {{ volume }}
+            snap-max-hard-limit 100"
+
+  - name: Set snapshot soft limit
+    shell: "echo y | gluster snapshot config snap-max-soft-limit 7"
+
+  - name: Check status of auto-delete
+    shell: "gluster snapshot config | grep auto-delete | awk '{ print $3 }'"
+    changed_when: false
+    register: snap_auto_delete_status
+
+  - name: Enable snapshot auto-delete
+    command: "gluster snapshot config auto-delete enable"
+    when: snap_auto_delete_status.stdout != "enable"
+
+  - name: Check if gluster_shared_storage is enabled
+    shell: "gluster volume get all cluster.enable-shared-storage |
+            grep cluster.enable-shared-storage | awk '{ print $2 }'"
+    changed_when: false
+    register: shared_storage_status
+
+  - name: Enable gluster_shared_storage
+    command: "gluster volume set all cluster.enable-shared-storage enable"
+    when: shared_storage_status.stdout != "enable"
+
+    # XXX Fix: need to wait until share storage is active/mounted
+    # XXX Fix: Getting duplicate line in fstab. remove it manually here
+
+- name: Make sure gluster_shared_storage is mounted
+  mount:
+    fstype: glusterfs
+    path: /var/run/gluster/shared_storage/
+    src: "{{ ansible_fqdn }}:/gluster_shared_storage"
+    state: mounted
+
+- name: Make sure gluster_shared_storage service is enabled
+  systemd:
+    name: glusterfssharedstorage
+    enabled: true
+    daemon-reload: true
+
+- name: Adjust SELinux to allow cron to access gluster_shared_storage
+  seboolean:
+    name: cron_system_cronjob_use_shares
+    persistent: yes
+    state: yes
