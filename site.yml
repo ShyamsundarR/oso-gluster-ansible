@@ -13,12 +13,12 @@
 # Required tags:
 # For this playbook to function properly, the ec2 instances need to have the
 # following tags applied to them:
-#   gluster: server
-#   cluster: <cluster #>
-#   group:   <group #>
+#   gluster-group: <group-id>
+#   (e.g., gluster-group=us-east-2-c00-g00)
 # One host from each cluster should additionally have a tag:
-#   manager: true
-# This "manager" host will be used for peer probe
+#   gluster-master: <cluster-id>
+#   (e.g., gluster-master=us-east-2-c00)
+# This "master" host will be used for peer probe and volume operations
 
 
 - name: Prepare Gluster TLS CA
