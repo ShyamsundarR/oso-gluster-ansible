@@ -1,7 +1,3 @@
-[gluster-servers:children]
-# List all clusters as children of gluster-servers
-g-us-east-2-c00
-
 [g-us-east-2-c00:vars]
 cluster_master="{{ groups['tag_gluster-master_us-east-2-c00'][0] }}"
 
@@ -9,3 +5,7 @@ cluster_master="{{ groups['tag_gluster-master_us-east-2-c00'][0] }}"
 [g-us-east-2-c00:children]
 tag_gluster-group_us-east-2-c00-g00
 tag_gluster-group_us-east-2-c00-g01
+
+[gluster-servers:children]
+# List all clusters as children of gluster-servers
+g-us-east-2-c00
