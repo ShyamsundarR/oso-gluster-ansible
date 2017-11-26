@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 NODES = 6
-DISKS_PER_NODE = 1
+DISKS_PER_NODE = 2
 DISKSIZE = "50G"
 
 Vagrant.configure("2") do |config|
