@@ -1,0 +1,36 @@
+# vim: set ts=2 sw=2 et :
+---
+
+- name: Install Performance Co-Pilot Packages
+  package:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+  - pcp
+  - pcp-pmda-dm
+  - pcp-pmda-gluster
+  - pcp-system-tools
+
+- name: Open firewall for PCP
+  firewalld:
+    service: pmcd
+    state: enabled
+    immediate: true
+    permanent: true
+
+- name: Enable PCP
+  systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  with_items:
+  - pmcd
+  - pmlogger
+
+- name: Install additional pmda(s)
+  shell: "echo b | ./Install"
+  args:
+    chdir: "/var/lib/pcp/pmdas/{{ item }}"
+  with_items:
+  - dm
+  - gluster

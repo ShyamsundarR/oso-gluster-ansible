@@ -1,0 +1,33 @@
+# vim: set ts=2 sw=2 et :
+---
+
+- name: Prepare Gluster TLS CA
+  hosts: localhost
+  become: false
+  roles:
+  - prepare-gluster-ca
+
+
+- name: Install Gluster on servers
+  hosts: gluster-servers
+  become: true
+  roles:
+  - gluster-server
+  - pcp-collector
+
+
+- name: Install Gluster client everywhere
+  hosts: all
+  become: true
+  roles:
+  - gluster-client
+
+
+- name: Clean up local TLS files
+  hosts: localhost
+  become: false
+  tasks:
+  - name: Clean up local temp directory
+    file:
+      path: "{{ hostvars.localhost.tempdir }}"
+      state: absent
