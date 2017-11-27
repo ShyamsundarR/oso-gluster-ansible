@@ -5,13 +5,18 @@
   become: true
   tasks:
   # AWS attaches disks to /dev/xvd*, but vagrant /dev/vd*
-  # Synlinking allows us to use the same playbooks on both
-  - file:
-      src: "/dev/vd{{ item }}"
-      path: "/dev/xvd{{ item }}"
-      state: link
-    with_items:
-    - b
-    - c
-    - d
-    failed_when: false
+  # Symlinking allows us to use the same playbooks on both
+  # This creates a udev rule to do that for us!
+  - name: Create /dev/vd* ==> /dev/xvd* udev rule
+    copy:
+      content: 'KERNEL=="vd[a-z]*", SUBSYSTEM=="block", SYMLINK+="x%k"'
+      dest: /etc/udev/rules.d/90-hdd-links.rules
+    register: udev_hdd_rule
+
+  - name: Reload udev rules
+    command: "udevadm control --reload"
+    when: udev_hdd_rule.changed
+
+  - name: Trigger udev events
+    command: "udevadm trigger"
+    when: udev_hdd_rule.changed
