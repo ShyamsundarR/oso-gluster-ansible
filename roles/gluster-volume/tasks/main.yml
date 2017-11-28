@@ -112,9 +112,22 @@
   - name: Enable gluster_shared_storage
     command: "gluster volume set all cluster.enable-shared-storage enable"
     when: shared_storage_status.stdout != "enable"
+    register: shared_storage_just_enabled
 
-    # XXX Fix: need to wait until share storage is active/mounted
-    # XXX Fix: Getting duplicate line in fstab. remove it manually here
+- name: Wait until gluster_shared_storage is mounted
+  command: "grep -q /run/gluster/shared_storage /proc/mounts"
+  register: result
+  delay: 3
+  retries: 100
+  until: result.rc == 0
+  when: shared_storage_just_enabled.changed
+
+# Manually remove fstab entry because mount module will add its own
+- name: Remove shared_storage fstab entry
+  lineinfile:
+    path: /etc/fstab
+    regexp: '/run/gluster/shared_storage/'
+    state: absent
 
 - name: Make sure gluster_shared_storage is mounted
   mount:
@@ -134,3 +147,37 @@
     name: cron_system_cronjob_use_shares
     persistent: yes
     state: yes
+
+# The scheduler needes to be init'd from each node, but it also does
+# cluster-wide operations that fail if done simultaneously. We use a random
+# delay to stagger things.
+- name: Initialize snapshot scheduler
+  command: "snap_scheduler.py init"
+  args:
+    creates: /etc/cron.d/gcron_update_task
+  register: result
+  delay: "{{ 10 | random }}"
+  retries: 100
+  until: result.rc == 0
+
+- run_once: true
+  delegate_to: "{{ cluster_master }}"
+  block:
+  - name: Check if snap scheduling is enabled
+    stat:
+      path: /var/run/gluster/shared_storage/snaps/glusterfs_snap_cron_tasks
+    register: snap_lnk
+
+  - name: Enable snap scheduling
+    command: "snap_scheduler.py enable"
+    when: snap_lnk.stat.islnk is defined and snap_lnk.stat.islnk == false
+
+  - name: Check for daily snapshot job
+    command: "snap_scheduler.py list"
+    changed_when: false
+    register: result
+
+  # Take a daily snapshot at some random minute past midnight
+  - name: Create daily snapshot job
+    command: "snap_scheduler.py add 'daily_{{ volume }}' '{{ 59 | random }} 0 * * *' '{{ volume }}'"
+    when: result.stdout.find('daily_' ~ volume) == -1
