@@ -87,12 +87,15 @@
       state: started
       name: "{{ volume }}"
 
+  # We set hard limit to 100 so that the soft limit percentage == actual
+  # number.
   - name: Set snapshot hard limit
     shell: "echo y | gluster snapshot config {{ volume }}
             snap-max-hard-limit 100"
 
   - name: Set snapshot soft limit
-    shell: "echo y | gluster snapshot config snap-max-soft-limit 7"
+    shell: "echo y | gluster snapshot config snap-max-soft-limit
+            {{ max_gluster_snaphots }}"
 
   - name: Check status of auto-delete
     shell: "gluster snapshot config | grep auto-delete | awk '{ print $3 }'"

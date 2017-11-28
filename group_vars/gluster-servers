@@ -8,3 +8,6 @@ gluster_volumes:
     size: 500G
     device: /dev/xvdb
     group: tag_gluster-group_us-east-2-c00-g01
+
+# Number of snapshots to retain per supervol
+max_gluster_snaphots: 7
