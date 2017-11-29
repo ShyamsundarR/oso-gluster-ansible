@@ -1,0 +1,73 @@
+# vim: set ts=2 sw=2 et :
+---
+
+- hosts: gluster-servers
+  become: true
+  any_errors_fatal: true
+  serial: 1
+  tasks:
+  - name: Wait for outstanding heals
+    shell: "gluster vol heal {{ item }} info | grep entries |
+            grep -v 'entries: 0' | wc -l"
+    delegate_to: "{{ cluster_master }}"
+    register: result
+    changed_when: false
+    until: result.stdout == '0'
+    retries: 360
+    delay: 10
+    when: "gluster_volumes is defined and
+           inventory_hostname in groups[gluster_volumes[item].group]"
+    with_items: "{{ gluster_volumes }}"
+
+  - name: Check for split-brain
+    shell: "gluster vol heal {{ item }} info split-brain | grep entries |
+            grep -v 'brain: 0' | wc -l"
+    delegate_to: "{{ cluster_master }}"
+    register: result
+    changed_when: false
+    when: "gluster_volumes is defined and
+           inventory_hostname in groups[gluster_volumes[item].group]"
+    with_items: "{{ gluster_volumes }}"
+
+  - name: Fail if split-brain
+    fail:
+    when: (item.stdout is defined) and (item.stdout != '0')
+    with_items: "{{ result.results }}"
+
+  - include_role:
+      name: reboot-system
+
+
+
+- hosts: gluster-servers
+  become: true
+  any_errors_fatal: true
+  serial: 1
+  tasks:
+  - name: Wait for outstanding heals
+    shell: "gluster vol heal {{ item }} info | grep entries |
+            grep -v 'entries: 0' | wc -l"
+    delegate_to: "{{ cluster_master }}"
+    register: result
+    until: result.stdout == '0'
+    retries: 360
+    delay: 10
+    changed_when: false
+    when: "gluster_volumes is defined and
+           inventory_hostname in groups[gluster_volumes[item].group]"
+    with_items: "{{ gluster_volumes }}"
+
+  - name: Check for split-brain
+    shell: "gluster vol heal {{ item }} info split-brain | grep entries |
+            grep -v 'brain: 0' | wc -l"
+    delegate_to: "{{ cluster_master }}"
+    register: result
+    changed_when: false
+    when: "gluster_volumes is defined and
+           inventory_hostname in groups[gluster_volumes[item].group]"
+    with_items: "{{ gluster_volumes }}"
+
+  - name: Fail if split-brain
+    fail:
+    when: (item.stdout is defined) and (item.stdout != '0')
+    with_items: "{{ result.results }}"
