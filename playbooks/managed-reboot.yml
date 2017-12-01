@@ -1,6 +1,10 @@
 # vim: set ts=2 sw=2 et :
 ---
 
+########################################
+# Rework this as a role, according to:
+# https://github.com/ansible/ansible/issues/12170
+
 - hosts: gluster-servers
   become: true
   any_errors_fatal: true
