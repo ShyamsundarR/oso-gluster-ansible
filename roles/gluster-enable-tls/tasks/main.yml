@@ -14,7 +14,7 @@
       state: latest
 
   - name: Create private key
-    command: openssl genrsa -out {{ keyfile }} 2048
+    command: openssl genrsa -out {{ keyfile }} {{ GLUSTER_NODE_KEY_SIZE }}
     args:
       creates: "{{ keyfile }}"
 
@@ -36,8 +36,8 @@
   - name: Sign CSRs
     local_action: "command openssl x509 -req
                      -in {{ hostvars.localhost.tempdir }}/{{ ansible_nodename }}.csr
-                     -CA {{ GLUSTER_CA_FILE_BASE }}.pem
-                     -CAkey {{ GLUSTER_CA_FILE_BASE }}.key
+                     -CA ../{{ GLUSTER_CA_FILE_BASE }}.pem
+                     -CAkey ../{{ GLUSTER_CA_FILE_BASE }}.key
                      -CAcreateserial
                      -out {{ hostvars.localhost.tempdir }}/{{ ansible_nodename }}.pem
                      -days {{ GLUSTER_KEY_VALID_DAYS }}"
@@ -57,7 +57,7 @@
 
 - name: Copy CA cert to all machines
   copy:
-    src: "{{ GLUSTER_CA_FILE_BASE }}.pem"
+    src: "../{{ GLUSTER_CA_FILE_BASE }}.pem"
     dest: "{{ cafile }}"
 
 - name: Make sure /var/lib/glusterd exists
