@@ -1,0 +1,6 @@
+#! /bin/bash
+
+ansible-playbook \
+  -i ec2.py \
+  -i inventory_groups \
+  $*
