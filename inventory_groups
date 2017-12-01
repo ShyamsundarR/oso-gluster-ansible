@@ -1,5 +1,5 @@
 [g-us-east-2-c00:vars]
-cluster_master="{{ groups['tag_gluster-master_us-east-2-c00'][0] }}"
+cluster_master="{{ groups['tag_gluster_master_us_east_2_c00'][0] }}"
 
 # Server groups in the cluster
 [g-us-east-2-c00:children]
