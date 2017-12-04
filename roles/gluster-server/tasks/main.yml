@@ -37,3 +37,10 @@
     name: glusterd
     enabled: true
     state: started
+
+- name: Install additional packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - git
