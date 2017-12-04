@@ -9,16 +9,3 @@
 - name: Save temp directory
   set_fact:
     tempdir: "{{ tempdir.path }}"
-
-- name: Create CA private key
-  command: "openssl genrsa -out ../{{ GLUSTER_CA_FILE_BASE }}.key
-              {{ GLUSTER_CA_KEY_SIZE }}"
-  args:
-    creates: "../{{ GLUSTER_CA_FILE_BASE }}.key"
-
-- name: Create self-signed CA cert
-  command: "openssl req -new -x509 -key ../{{ GLUSTER_CA_FILE_BASE }}.key
-              -subj '/CN=GlusterCA' -days {{ GLUSTER_KEY_VALID_DAYS }}
-              -out ../{{ GLUSTER_CA_FILE_BASE }}.pem"
-  args:
-    creates: "../{{ GLUSTER_CA_FILE_BASE }}.pem"
