@@ -167,13 +167,12 @@
   delegate_to: "{{ cluster_master }}"
   block:
   - name: Check if snap scheduling is enabled
-    stat:
-      path: /var/run/gluster/shared_storage/snaps/glusterfs_snap_cron_tasks
-    register: snap_lnk
+    shell: "snap_scheduler.py status | awk '{ print $5 }'"
+    register: snap_status
 
   - name: Enable snap scheduling
     command: "snap_scheduler.py enable"
-    when: snap_lnk.stat.islnk is defined and snap_lnk.stat.islnk == false
+    when: snap_status == 'Disabled'
 
   - name: Check for daily snapshot job
     command: "snap_scheduler.py list"
