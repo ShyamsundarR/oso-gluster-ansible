@@ -1,0 +1,8 @@
+# vim: set ts=2 sw=2 et :
+---
+
+- name: Add/remove authorized SSH keys
+  hosts: all
+  become: false
+  roles:
+  - ssh-keys

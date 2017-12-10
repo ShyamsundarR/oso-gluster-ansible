@@ -21,6 +21,10 @@
 # This "master" host will be used for peer probe and volume operations
 
 
+# Install/remove ssh authorized keys
+- import_playbook: playbooks/ssh-keys.yml
+
+
 # Install Gluster servers and clients
 - import_playbook: playbooks/install-servers.yml
 

@@ -1,0 +1,19 @@
+---
+# vim: set ts=2 sw=2 et :
+
+- name: Install allowed keys
+  authorized_key:
+    user: "{{ ansible_user }}"
+    key: "{{ lookup('file', item) }}"
+    comment: "{{ item | basename }}"
+    state: present
+  with_fileglob:
+  - "ssh-allow/*.pub"
+
+- name: Remove dis-allowed keys
+  authorized_key:
+    user: "{{ ansible_user }}"
+    key: "{{ lookup('file', item) }}"
+    state: absent
+  with_fileglob:
+  - "ssh-deny/*.pub"
