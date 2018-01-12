@@ -2,6 +2,21 @@
 ---
 
 - hosts: all
+  become: false
+  gather_facts: false
+  tasks:
+  # Sometimes provisioning starts before all hosts are up and ready,
+  # causing failures. Here, we delay until we can ansible ping
+  - name: Wait for host to be available
+    ping:
+      data: "pong"
+    register: task_result
+    until: task_result.ping == "pong"
+    delay: 2
+    retries: 60
+    changed_when: false
+
+- hosts: all
   become: true
   tasks:
   # AWS attaches disks to /dev/xvd*, but vagrant /dev/vd*
