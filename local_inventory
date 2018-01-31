@@ -1,0 +1,11 @@
+gluster-test1 ansible_ssh_host=18.144.39.110 ansible_ssh_user='ec2-user'
+gluster-test2 ansible_ssh_host=13.57.51.141 ansible_ssh_user='ec2-user'
+gluster-test3 ansible_ssh_host=13.57.199.180 ansible_ssh_user='ec2-user'
+
+[tag_gluster_master_us_east_2_c00]
+gluster-test1
+
+[tag_gluster_group_us_east_2_c00_g00]
+gluster-test1
+gluster-test2
+gluster-test3
