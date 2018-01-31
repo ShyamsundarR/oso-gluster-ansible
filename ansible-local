@@ -1,0 +1,6 @@
+#! /bin/bash
+
+ansible-playbook \
+  -i local_inventory \
+  -i inventory_groups \
+  $*
