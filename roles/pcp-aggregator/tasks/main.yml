@@ -1,0 +1,55 @@
+# vim: set ts=2 sw=2 et :
+---
+
+- name: Install Extra Performance Co-Pilot Packages
+  package:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+  - pcp-manager
+  - pcp-export-pcp2zabbix
+
+- name: Remove pmmgr default config files
+  file:
+    state: absent
+    path: "{{ item }}"
+  with_items:
+  - /etc/pcp/pmmgr/disk-full-retention
+  - /etc/pcp/pmmgr/disk-full-threshold
+  - /etc/pcp/pmmgr/pmie
+  - /etc/pcp/pmmgr/pmieconf
+  - /etc/pcp/pmmgr/pmlogconf
+  - /etc/pcp/pmmgr/pmlogger
+  - /etc/pcp/pmmgr/pmlogmerge
+  - /etc/pcp/pmmgr/pmlogmerge-granular
+  - /etc/pcp/pmmgr/pmlogmerge-rewrite
+  - /etc/pcp/pmmgr/pmlogreduce
+  #- /etc/pcp/pmmgr/pmmgr.options
+  #- /etc/pcp/pmmgr/README
+  - /etc/pcp/pmmgr/target-discovery.example-avahi
+
+
+- name: Set up list of hosts to monitor
+  lineinfile:
+    create: yes
+    line: "{{ item }}"
+    path: /etc/pcp/pmmgr/target-host
+    state: present
+  with_items:
+  - "{{ groups['gluster-servers'] |
+        map('extract', hostvars, 'ansible_fqdn') |
+        list }}"
+
+- name: Relay metrics to Zabbix
+  lineinfile:
+    create: yes
+    regexp: '^pcp2zabbix '
+    line: "pcp2zabbix -g {{ zabbix_server }} -E 60 -t 60 {{ pcp_metrics | join(' ') }}"
+    path: /etc/pcp/pmmgr/monitor
+    state: present
+
+- name: Start PCP manager
+  systemd:
+    name: pmmgr
+    enabled: true
+    state: restarted

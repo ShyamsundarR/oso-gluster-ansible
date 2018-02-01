@@ -1,0 +1,23 @@
+# vim: set ts=2 sw=2 et :
+---
+
+- name: Install copr repo for PCP
+  copy:
+    dest: /etc/yum.repos.d
+    src: pcp.repo
+
+- name: Install Performance Co-Pilot Daemon
+  package:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+  - pcp
+  - pcp-system-tools
+
+- name: Enable PCP
+  systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: restarted
+  with_items:
+  - pmcd
