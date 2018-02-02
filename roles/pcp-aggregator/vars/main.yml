@@ -1,4 +1,4 @@
-zabbix_server: 127.0.0.1
+zabbix_server: zabbix.devshift.net
 
 pcp_metrics:
 - disk.dev.read
