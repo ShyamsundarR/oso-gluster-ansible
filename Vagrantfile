@@ -8,7 +8,7 @@ DISKSIZE = "50G"
 Vagrant.configure("2") do |config|
   config.vm.box = "rhel-svr-7.4-reg"
   config.vm.provider "libvirt" do |lv|
-    lv.cpus = "2"
+    lv.cpus = "1"
     lv.memory = "1024"
     lv.nested = true
     lv.volume_cache = "none"
@@ -17,11 +17,9 @@ Vagrant.configure("2") do |config|
   # Can't write to /vagrant on atomic-host, so disable default sync dir
   config.vm.synced_folder ".", "/vagrant", disabled: true
 
-#  config.vm.define "master" do |node|
-#    node.vm.hostname = "master"
-#    # master gets this repo synced to /vagrant
-#    #node.vm.synced_folder ".", "/vagrant", type: "sshfs"
-#  end
+  config.vm.define "jumper" do |node|
+    node.vm.hostname = "jumper"
+  end
 
   (0..NODES-1).each do |i|
     config.vm.define "node#{i}" do |node|
@@ -47,6 +45,8 @@ Vagrant.configure("2") do |config|
           #}
           ansible.groups = {
             # mimics AWS dynamic inventory generated group based on instance
+            # tag of Name=gluster-mgmt
+            "tag_Name_gluster_mgmt" => ["jumper"],
             # tag of gluster-master=us-east-2-c00
             "tag_gluster_master_us_east_2_c00" => ["node1"],
             # ec2 tag: gluster-group=us-east-2-c00-g00
