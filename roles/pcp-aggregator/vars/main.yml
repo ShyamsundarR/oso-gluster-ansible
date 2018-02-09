@@ -25,6 +25,7 @@ pcp_metrics:
 - kernel.all.cpu.irq.soft
 - kernel.all.cpu.irq.hard
 
+- mem.util.available
 - mem.util.used
 - mem.util.free
 - mem.util.bufmem
