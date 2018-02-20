@@ -55,7 +55,7 @@
 - name: Mount brick
   mount:
     fstype: xfs
-    opts: inode64
+    opts: inode64,discard
     path: /bricks/{{ volume }}
     src: /dev/mapper/{{ volume }}-{{ volume }}
     state: mounted
@@ -78,6 +78,10 @@
       options:
         client.ssl: "on"
         server.ssl: "on"
+        performance.nl-cache: "on"
+        performance.md-cache-timeout: "300"
+        performance.cache-refresh-timeout: "60"
+        performance.cache-size: "134217728"
       cluster: "{{ groups[gluster_volumes[volume].group] |
                    map('extract', hostvars, 'ansible_fqdn') |
                    list }}"
