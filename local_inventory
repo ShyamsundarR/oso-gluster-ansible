@@ -1,11 +1,25 @@
-gluster-test1 ansible_ssh_host=18.144.39.110 ansible_ssh_user='ec2-user'
-gluster-test2 ansible_ssh_host=13.57.51.141 ansible_ssh_user='ec2-user'
-gluster-test3 ansible_ssh_host=13.57.199.180 ansible_ssh_user='ec2-user'
+# Example "local" ansible configuration
+
+node0 ansible_host=192.168.121.90 ansible_port=22 ansible_user='vagrant'
+node1 ansible_host=192.168.121.105 ansible_port=22 ansible_user='vagrant'
+node2 ansible_host=192.168.121.83 ansible_port=22 ansible_user='vagrant'
+node3 ansible_host=192.168.121.201 ansible_port=22 ansible_user='vagrant'
+node4 ansible_host=192.168.121.231 ansible_port=22 ansible_user='vagrant'
+node5 ansible_host=192.168.121.189 ansible_port=22 ansible_user='vagrant'
+jumper ansible_host=192.168.121.165 ansible_port=22 ansible_user='vagrant'
+
+[tag_Name_gluster_mgmt]
+jumper
 
 [tag_gluster_master_us_east_2_c00]
-gluster-test1
+node1
 
 [tag_gluster_group_us_east_2_c00_g00]
-gluster-test1
-gluster-test2
-gluster-test3
+node0
+node1
+node2
+
+[tag_gluster_group_us_east_2_c00_g01]
+node3
+node4
+node5
