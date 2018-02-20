@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/JohnStrunk/oso-gluster-ansible.svg?branch=master)](https://travis-ci.org/JohnStrunk/oso-gluster-ansible)
+
 # Running playbooks
 
 The playbooks in this repo can be conveniently be run either with the
