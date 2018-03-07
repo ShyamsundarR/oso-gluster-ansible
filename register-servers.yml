@@ -18,7 +18,7 @@
       force_register: true
       # Employee sku
       pool_ids:
-      - 8a85f9815ad3324a015ad3b083e545b3
+      - 8a85f98460bfb0470160c2ff250f3e66
 
   - name: Disable all repos
     command: subscription-manager repos --disable='*'
