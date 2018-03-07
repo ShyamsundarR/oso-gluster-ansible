@@ -49,16 +49,18 @@ Vagrant.configure("2") do |config|
             # mimics AWS dynamic inventory generated group based on instance
             # tag of Name=gluster-mgmt
             "tag_Name_gluster_mgmt" => ["jumper"],
-            # tag of gluster-master=us-east-2-c00
-            "tag_gluster_master_us_east_2_c00" => ["node1"],
+            # tag of gluster-master=us-east-2a-c00
+            "tag_gluster_master_us_east_2a_c00" => ["node0"],
             # ec2 tag: gluster-group=us-east-2-c00-g00
-            "tag_gluster_group_us_east_2_c00_g00" => [
+            "tag_gluster_group_us_east_2a_c00_g00" => [
               "node0",
               "node1",
               "node2"
             ],
-            # ec2 tag: gluster-group=us-east-2-c00-g01
-            "tag_gluster_group_us_east_2_c00_g01" => [
+            # tag of gluster-master=us-east-2a-c01
+            "tag_gluster_master_us_east_2a_c01" => ["node3"],
+            # ec2 tag: gluster-group=us-east-2-c01-g00
+            "tag_gluster_group_us_east_2a_c01_g00" => [
               "node3",
               "node4",
               "node5"
