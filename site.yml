@@ -33,6 +33,10 @@
 - import_playbook: playbooks/gluster-volume.yml
 
 
+# Install pcp collection on jump host
+- import_playbook: playbooks/install-jumphost.yml
+
+
 # Need to add managed reboot sequence here
 # Reboot by AZ, ensuring hosts are up & healed before each reboot
 # Conditions:
