@@ -55,7 +55,7 @@
 - name: Mount brick
   mount:
     fstype: xfs
-    opts: inode64,discard
+    opts: inode64,discard,prjquota
     path: /bricks/{{ volume }}
     src: /dev/mapper/{{ volume }}-{{ volume }}
     state: mounted
