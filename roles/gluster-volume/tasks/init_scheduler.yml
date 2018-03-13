@@ -1,0 +1,4 @@
+- name: Initialize snapshot scheduler
+  command: "snap_scheduler.py init"
+  args:
+    creates: /etc/cron.d/gcron_update_task
