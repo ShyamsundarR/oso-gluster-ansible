@@ -1,6 +1,18 @@
 ---
 # vim: set ts=2 sw=2 et :
 
+- name: Create local temp directory
+  tempfile:
+    state: directory
+  delegate_to: localhost
+  become: false
+  run_once: true
+  register: tempdir
+
+- name: Save temp directory
+  set_fact:
+    tempdir: "{{ tempdir.path }}"
+
 - name: Check for TLS certificate
   stat:
     path: "{{ pemfile }}"
@@ -26,18 +38,6 @@
                 -out {{ csrfile }}"
     args:
       creates: "{{ csrfile }}"
-
-  - name: Create local temp directory
-    tempfile:
-      state: directory
-    delegate_to: localhost
-    become: false
-    run_once: true
-    register: tempdir
-
-  - name: Save temp directory
-    set_fact:
-      tempdir: "{{ tempdir.path }}"
 
   - name: Retrieve CSRs from all machines
     fetch:
@@ -67,13 +67,12 @@
       src: "{{ tempdir }}/{{ ansible_nodename }}.pem"
       dest: "{{ pemfile }}"
 
-  - name: Clean up local temp directory
-    file:
-      path: "{{ tempdir }}"
-      state: absent
-    delegate_to: localhost
-    run_once: true
-
+- name: Clean up local temp directory
+  file:
+    path: "{{ tempdir }}"
+    state: absent
+  delegate_to: localhost
+  run_once: true
 
 - name: Copy CA cert to all machines
   copy:
