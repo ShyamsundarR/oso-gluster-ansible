@@ -1,0 +1,2 @@
+# RHEL-7.4_HVM_GA-20170808-x86_64-2-Access2-GP2 (ami-7a96b801)
+ansible_user: 'ec2-user'

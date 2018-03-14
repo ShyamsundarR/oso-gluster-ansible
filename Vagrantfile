@@ -64,7 +64,12 @@ Vagrant.configure("2") do |config|
               "node3",
               "node4",
               "node5"
-            ]
+            ],
+            # tags that need to exist for the config to parse correctly
+            "tag_gluster_master_us_east_1a_c00" => ["dummy"],
+            "tag_gluster_group_us_east_1a_c00_g00" => ["dummy"],
+            "tag_gluster_master_us_east_1a_c01" => ["dummy"],
+            "tag_gluster_group_us_east_1a_c01_g00" => ["dummy"]
           }
           ansible.limit = "all"
           ansible.playbook = "vagrant.yml"
