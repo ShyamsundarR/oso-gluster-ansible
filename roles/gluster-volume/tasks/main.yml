@@ -155,17 +155,13 @@
     persistent: yes
     state: yes
 
-# The scheduler needes to be init'd from each node, but it also does
-# cluster-wide operations that fail if done simultaneously. We use a random
-# delay to stagger things.
+# We serialize this task using
+# https://github.com/ansible/ansible/issues/12170#issuecomment-372263149
+# so that we can avoid a race in scheduler init
 - name: Initialize snapshot scheduler
-  command: "snap_scheduler.py init"
-  args:
-    creates: /etc/cron.d/gcron_update_task
-  register: result
-  delay: "{{ 10 | random }}"
-  retries: 100
-  until: result.rc == 0
+  include_tasks: "init_scheduler.yml"
+  with_items: "{{ play_hosts }}"
+  when: "hostvars[item].inventory_hostname == inventory_hostname"
 
 - run_once: true
   delegate_to: "{{ cluster_master }}"
@@ -176,7 +172,7 @@
 
   - name: Enable snap scheduling
     command: "snap_scheduler.py enable"
-    when: snap_status == 'Disabled'
+    when: "snap_status.stdout != 'Enabled'"
 
   - name: Check for daily snapshot job
     command: "snap_scheduler.py list"
