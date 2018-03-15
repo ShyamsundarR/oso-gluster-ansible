@@ -46,6 +46,7 @@
       flat: yes
 
   - name: Sign CSRs
+    become: false
     local_action: "command openssl x509 -req
                      -in {{ tempdir }}/{{ ansible_nodename }}.csr
                      -CA ../{{ GLUSTER_CA_FILE_BASE }}.pem
@@ -57,6 +58,7 @@
       creates: "{{ tempdir }}/{{ ansible_nodename }}.pem"
 
   - name: Set mode for certs
+    become: false
     local_action:
       module: file
       path: "{{ tempdir }}/{{ ansible_nodename }}.pem"
@@ -72,6 +74,7 @@
     path: "{{ tempdir }}"
     state: absent
   delegate_to: localhost
+  become: false
   run_once: true
 
 - name: Copy CA cert to all machines
