@@ -58,6 +58,7 @@
       creates: "{{ tempdir }}/{{ ansible_nodename }}.pem"
 
   - name: Set mode for certs
+    become: false
     local_action:
       module: file
       path: "{{ tempdir }}/{{ ansible_nodename }}.pem"
@@ -73,6 +74,7 @@
     path: "{{ tempdir }}"
     state: absent
   delegate_to: localhost
+  become: false
   run_once: true
 
 - name: Copy CA cert to all machines
