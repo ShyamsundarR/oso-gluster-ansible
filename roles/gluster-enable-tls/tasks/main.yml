@@ -46,6 +46,7 @@
       flat: yes
 
   - name: Sign CSRs
+    become: false
     local_action: "command openssl x509 -req
                      -in {{ tempdir }}/{{ ansible_nodename }}.csr
                      -CA ../{{ GLUSTER_CA_FILE_BASE }}.pem
