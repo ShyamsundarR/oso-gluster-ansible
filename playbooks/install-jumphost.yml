@@ -1,12 +1,6 @@
 # vim: set ts=2 sw=2 et :
 ---
 
-- name: Collect info from servers
-  hosts: gluster-servers
-  become: false
-  tasks:
-  - ping:
-
 - name: Install PCP aggregation
   hosts: pcp-aggregators
   become: true

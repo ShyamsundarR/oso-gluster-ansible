@@ -29,16 +29,28 @@
   - /etc/pcp/pmmgr/target-discovery.example-avahi
 
 
+- name: "Install bind-utils to get 'host'"
+  package:
+    name: bind-utils
+    state: present
+
+- name: Reverse lookup server IPs
+  shell: "host {{ item }} | awk '{ print $5 }' | sed -r 's/(.*)\\./\\1/'"
+  with_items:
+  - "{{ groups['gluster-servers'] |
+        map('extract', hostvars, 'ansible_host') |
+        list }}"
+  changed_when: false
+  register: hostnames
+
 - name: Set up list of hosts to monitor
   lineinfile:
     create: yes
-    line: "{{ item }}"
+    line: "{{ item.stdout }}"
     path: /etc/pcp/pmmgr/target-host
     state: present
   with_items:
-  - "{{ groups['gluster-servers'] |
-        map('extract', hostvars, 'ansible_fqdn') |
-        list }}"
+  - "{{ hostnames.results }}"
 
 - name: Relay metrics to Zabbix
   lineinfile:
