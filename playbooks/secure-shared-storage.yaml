@@ -1,18 +1,6 @@
 # vim: set ts=2 sw=2 et :
 ---
 
-- hosts: gluster-servers
-  become: true
-  any_errors_fatal: true
-  tasks:
-  - include_role:
-      name: gluster-volume
-    with_items: "{{ gluster_volumes }}"
-    when: "gluster_volumes is defined and
-           inventory_hostname in groups[gluster_volumes[volume].group]"
-    loop_control:
-      loop_var: volume
-
 - name: Secure gluster shared storage volume
   hosts: gluster-servers
   become: true

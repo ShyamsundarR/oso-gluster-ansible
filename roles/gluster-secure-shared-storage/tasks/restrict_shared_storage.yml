@@ -1,0 +1,38 @@
+---
+# vim: set ts=2 sw=2 et :
+
+# TODO: tasks need all hosts that are part of the group to ensure that the
+# shared storage mount is restarted on all
+- name: Stop the gluster shared storage mounts
+  systemd:
+    name: glusterfssharedstorage
+    state: stopped
+
+- run_once: true
+  delegate_to: "{{ cluster_master }}"
+  block:
+  - name: Stop shared storage volume
+    gluster_volume:
+      state: stopped
+      name: gluster_shared_storage
+
+  - name: Enable server TLS for shared storage
+    command: "gluster volume set gluster_shared_storage server.ssl on"
+
+  - name: Enable client TLS for shared storage
+    command: "gluster volume set gluster_shared_storage client.ssl on"
+
+  - name: Restrict hosts for gluster shared storage TLS
+    command: "gluster volume set gluster_shared_storage auth.ssl-allow
+              {{ groups[gluster_volumes[volume].group]|
+              map('extract', hostvars, 'ansible_nodename') | join(',') }}"
+
+  - name: Start shared storage volume
+    gluster_volume:
+      state: started
+      name: gluster_shared_storage
+
+- name: Start the gluster shared storage mounts
+  systemd:
+    name: glusterfssharedstorage
+    state: started
