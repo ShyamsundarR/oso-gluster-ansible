@@ -1,8 +1,28 @@
 ---
 # vim: set ts=2 sw=2 et :
 
-# TODO: tasks need all hosts that are part of the group to ensure that the
-# shared storage mount is restarted on all
+- name: Check for required variables
+  fail: msg="Variable {{ item }} must be defined to use this playbook"
+  when: item is undefined
+  with_items:
+  - cluster_master
+  - cluster_member_group
+
+- run_once: true
+  delegate_to: "{{ cluster_master }}"
+  block:
+  - name: Check if all hosts that form the gluster cluster are part of the play
+    fail: msg="All hosts that form the gluster cluster are not part of the play, missing {{ gl_gluster_hosts }}"
+    when: gl_gluster_hosts|length != 0
+    vars:
+      gl_gluster_hosts: "{{ groups[hostvars[inventory_hostname].cluster_member_group] | difference(play_hosts) }}"
+
+  - name: Check if additional hosts that are not part of the gluster cluster are not part of the play
+    fail: msg="More hosts than ones that form the gluster cluster are part of the play, additional {{ gl_this_play_hosts }}"
+    when: gl_this_play_hosts|length != 0
+    vars:
+      gl_this_play_hosts: "{{ play_hosts | difference(groups[hostvars[inventory_hostname].cluster_member_group]) }}"
+
 - name: Stop the gluster shared storage mounts
   systemd:
     name: glusterfssharedstorage
@@ -24,7 +44,7 @@
 
   - name: Restrict hosts for gluster shared storage TLS
     command: "gluster volume set gluster_shared_storage auth.ssl-allow
-              {{ groups[gluster_volumes[volume].group]|
+              {{ groups[hostvars[inventory_hostname].cluster_member_group]|
               map('extract', hostvars, 'ansible_nodename') | join(',') }}"
 
   - name: Start shared storage volume
