@@ -69,8 +69,3 @@
     path: /var/run/gluster/shared_storage/
     src: "{{ ansible_fqdn }}:/gluster_shared_storage"
     state: mounted
-
-- name: Start shared storage mount using systemd (defence against the dark arts)
-  systemd:
-    name: glusterfssharedstorage
-    state: started
