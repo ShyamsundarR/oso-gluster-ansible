@@ -23,10 +23,21 @@
     vars:
       gl_this_play_hosts: "{{ play_hosts | difference(groups[hostvars[inventory_hostname].cluster_member_group]) }}"
 
-- name: Stop the gluster shared storage mounts
+# We unmount the shared storage volume using systemd and via a manual umount as,
+#   - Either fstab mounted it, in which case stopping it via systemd will not
+#     work
+#   - Or, systemd started it and umount will only trigger systemd to re-mount it
+#     3 seconds later
+# Hence, we defend against the dark arts of deamon management!
+- name: Stop shared storage mount using systemd (defence against the dark arts)
   systemd:
     name: glusterfssharedstorage
     state: stopped
+
+- name: Umount the gluster shared storage mounts
+  mount:
+    path: /var/run/gluster/shared_storage/
+    state: unmounted
 
 - run_once: true
   delegate_to: "{{ cluster_master }}"
@@ -52,7 +63,14 @@
       state: started
       name: gluster_shared_storage
 
-- name: Start the gluster shared storage mounts
+- name: Mount gluster shared storage
+  mount:
+    fstype: glusterfs
+    path: /var/run/gluster/shared_storage/
+    src: "{{ ansible_fqdn }}:/gluster_shared_storage"
+    state: mounted
+
+- name: Start shared storage mount using systemd (defence against the dark arts)
   systemd:
     name: glusterfssharedstorage
     state: started
