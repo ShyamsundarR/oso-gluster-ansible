@@ -2,7 +2,7 @@
 
 # Running playbooks
 
-The playbooks in this repo can be conveniently be run either with the
+The playbooks in this repo can conveniently be run either with the
 `ansible-vagrant` or `ansible-ec2` scripts depending on whether the playbook
 should be run against the live environment or the Vagrant virtual one.
 
