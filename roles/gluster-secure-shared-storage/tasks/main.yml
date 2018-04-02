@@ -1,0 +1,39 @@
+---
+# vim: set ts=2 sw=2 et :
+
+- name: Check for required variables
+  fail: msg="Variable {{ item }} must be defined to use this playbook"
+  when: item is undefined
+  with_items:
+  - cluster_master
+  - cluster_member_group
+
+- run_once: true
+  delegate_to: "{{ cluster_master }}"
+  block:
+  - name: Check if gluster_shared_storage is TLS enabled
+    shell: "gluster volume get gluster_shared_storage server.ssl |
+            grep server.ssl | awk '{ print $2}'"
+    changed_when: false
+    register: ss_server_tls_status
+
+  - name: Check if gluster_shared_storage clients are TLS enabled
+    shell: "gluster volume get gluster_shared_storage client.ssl |
+            grep client.ssl | awk '{ print $2}'"
+    changed_when: false
+    register: ss_client_tls_status
+
+  - name: Check if gluster_shared_storage is TLS allow restricted
+    shell: "gluster volume get gluster_shared_storage auth.ssl-allow |
+            grep auth.ssl-allow | awk '{ print $2}'"
+    changed_when: false
+    register: ss_tls_allow_status
+
+# False positive can occur here, when partial hosts are given, as the allow
+# list would not match, but the invoked play will do the right thing, by not
+# setting or changing any configuration.
+- name: Configure shared storage access restrictions
+  include_tasks: "restrict_shared_storage.yml"
+  when: (ss_server_tls_status.stdout != "on") or (ss_client_tls_status.stdout != "on") or
+        (ss_tls_allow_status.stdout != groups[hostvars[inventory_hostname].cluster_member_group]|
+          map('extract', hostvars, 'ansible_nodename') | join(','))

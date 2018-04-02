@@ -1,0 +1,71 @@
+---
+# vim: set ts=2 sw=2 et :
+
+- name: Check for required variables
+  fail: msg="Variable {{ item }} must be defined to use this playbook"
+  when: item is undefined
+  with_items:
+  - cluster_master
+  - cluster_member_group
+
+- run_once: true
+  delegate_to: "{{ cluster_master }}"
+  block:
+  - name: Check if all hosts that form the gluster cluster are part of the play
+    fail: msg="All hosts that form the gluster cluster are not part of the play, missing {{ gl_gluster_hosts }}"
+    when: gl_gluster_hosts|length != 0
+    vars:
+      gl_gluster_hosts: "{{ groups[hostvars[inventory_hostname].cluster_member_group] | difference(play_hosts) }}"
+
+  - name: Check if additional hosts that are not part of the gluster cluster are not part of the play
+    fail: msg="More hosts than ones that form the gluster cluster are part of the play, additional {{ gl_this_play_hosts }}"
+    when: gl_this_play_hosts|length != 0
+    vars:
+      gl_this_play_hosts: "{{ play_hosts | difference(groups[hostvars[inventory_hostname].cluster_member_group]) }}"
+
+# We unmount the shared storage volume using systemd and via a manual umount as,
+#   - Either fstab mounted it, in which case stopping it via systemd will not
+#     work
+#   - Or, systemd started it and umount will only trigger systemd to re-mount it
+#     3 seconds later
+# Hence, we defend against the dark arts of deamon management!
+- name: Stop shared storage mount using systemd (defence against the dark arts)
+  systemd:
+    name: glusterfssharedstorage
+    state: stopped
+
+- name: Umount the gluster shared storage mounts
+  mount:
+    path: /var/run/gluster/shared_storage/
+    state: unmounted
+
+- run_once: true
+  delegate_to: "{{ cluster_master }}"
+  block:
+  - name: Stop shared storage volume
+    gluster_volume:
+      state: stopped
+      name: gluster_shared_storage
+
+  - name: Enable server TLS for shared storage
+    command: "gluster volume set gluster_shared_storage server.ssl on"
+
+  - name: Enable client TLS for shared storage
+    command: "gluster volume set gluster_shared_storage client.ssl on"
+
+  - name: Restrict hosts for gluster shared storage TLS
+    command: "gluster volume set gluster_shared_storage auth.ssl-allow
+              {{ groups[hostvars[inventory_hostname].cluster_member_group]|
+              map('extract', hostvars, 'ansible_nodename') | join(',') }}"
+
+  - name: Start shared storage volume
+    gluster_volume:
+      state: started
+      name: gluster_shared_storage
+
+- name: Mount gluster shared storage
+  mount:
+    fstype: glusterfs
+    path: /var/run/gluster/shared_storage/
+    src: "{{ ansible_fqdn }}:/gluster_shared_storage"
+    state: mounted
