@@ -56,7 +56,7 @@
   lineinfile:
     create: yes
     regexp: '^pcp2zabbix '
-    line: "pcp2zabbix -g {{ zabbix_server }} -E 60 -t 60 {{ pcp_metrics | join(' ') }}"
+    line: "pcp2zabbix --lld -g {{ zabbix_server }} -E 60 -t 60 {{ pcp_metrics | join(' ') }}"
     path: /etc/pcp/pmmgr/monitor
     state: present
 
