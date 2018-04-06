@@ -22,4 +22,9 @@
     chdir: "/var/lib/pcp/pmdas/{{ item }}"
   with_items:
   - dm
-  #- gluster
+
+- name: Install Gluster pmda only on master nodes
+  shell: "echo b | ./Install"
+  args:
+    chdir: "/var/lib/pcp/pmdas/gluster"
+  when: group_names|join(" ") is search("tag_gluster_master")

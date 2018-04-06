@@ -91,6 +91,14 @@
       state: started
       name: "{{ volume }}"
 
+  # We enable profiling so that the gluster pmda can grab the stats
+  - name: Enable volume profiling
+    command: "gluster volume profile {{ volume }} start"
+    register: result
+    failed_when: "'started' not in result.stderr and
+                  'successful' not in result.stdout"
+    changed_when: "'successful' in result.stdout"
+
   # We set hard limit to 100 so that the soft limit percentage == actual
   # number.
   - name: Set snapshot hard limit

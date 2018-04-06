@@ -1,0 +1,8 @@
+# vim: set ts=2 sw=2 et :
+---
+
+- name: Install pcp on Gluster servers
+  hosts: gluster-servers
+  become: true
+  roles:
+  - pcp-collector

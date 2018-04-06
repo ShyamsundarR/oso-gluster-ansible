@@ -52,11 +52,17 @@
   with_items:
   - "{{ hostnames.results }}"
 
+- name: Add zabbix relay script
+  copy:
+    dest: /usr/local/bin/
+    src: pcp2zabbix_with_gluster.sh
+    mode: 0755
+
 - name: Relay metrics to Zabbix
   lineinfile:
     create: yes
-    regexp: '^pcp2zabbix '
-    line: "pcp2zabbix --lld -g {{ zabbix_server }} -E 60 -t 60 {{ pcp_metrics | join(' ') }}"
+    regexp: '^pcp2zabbix'
+    line: "pcp2zabbix_with_gluster.sh --lld -g {{ zabbix_server }} -E 60 -t 60 {{ pcp_metrics | join(' ') }}"
     path: /etc/pcp/pmmgr/monitor
     state: present
 
