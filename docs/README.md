@@ -1,6 +1,7 @@
 # OSIO Gluster Procedures
 
 ## Configuration
+- [Adding a new cluster definition](add-cluster.md)
 - [Installing a new Gluster cluster](install-cluster.md)
 
 ## Management
