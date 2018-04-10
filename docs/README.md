@@ -6,6 +6,8 @@
 
 ## Management
 - (Re)starting a brick
+- [Expanding LVM thin pool](expanding-lvm-thinpool.md)
+- [Resizing Gluster bricks](resizing-gluster-brick.md)
 
 ## Troubleshooting
 - Pod won't start due to storage mount failure
