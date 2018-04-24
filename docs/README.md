@@ -6,6 +6,7 @@
 
 ## Management
 - (Re)starting a brick
+- [Rebooting a node](node-reboot.md)
 - [Expanding LVM thin pool](expanding-lvm-thinpool.md)
 - [Resizing Gluster bricks](resizing-gluster-brick.md)
 
