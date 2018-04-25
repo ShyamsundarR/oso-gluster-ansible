@@ -39,22 +39,26 @@
   $ sudo mkdir /mnt/supervole1b00
   $ sudo mount -tglusterfs localhost:/supervole1b00 /mnt/supervole1b00
   ```
-- Create the command for the creator script. The proper syntax can be found
-  by looking at the top of the `creator.sh` script. Below, we are creating PVs
-  0 - 4999, each w/ a 1 GB quota.
+- Run the command for the creator script. The proper syntax can be found by
+  looking at the top of the `creator_xfs_quota.sh` script. Below, we are
+  creating PVs 0 - 4999, each w/ a 1 GB quota.
   ```shell
   $ cd /mnt/supervole1b00
-  $ /home/ec2-user/gluster-subvol/volcreator/creator.sh 192.168.20.11:192.168.20.12:192.168.20.13 supervole1b00 /mnt/supervole1b00 1 0 4999 | sudo tee creator_cmd_0_4999
+  $ sudo /home/ec2-user/gluster-subvol/volcreator/creator_xfs_quota.sh 172.31.80.251:172.31.87.134:172.31.93.163 supervole1b00 /mnt/supervole1b00/ 1 0 4999
   ```
-- Run the command. This will take 5 -- 6 hours to run.
+- The above command will create 2 files:
+  - `pvs-0-4999.yml`, which is the PV descriptions
+  - `quota-0-4999.dat`, which is the description of the quotas to apply to the
+    bricks
+- On each brick server, apply the quotas by providing the brick directory and
+  the quota file to the `apply_xfs_quota.sh` script
   ```shell
-  $ sudo /home/ec2-user/gluster-subvol/volcreator/creator.sh 192.168.20.11:192.168.20.12:192.168.20.13 supervole1b00 /mnt/supervole1b00 1 0 4999
+  $ sudo /home/ec2-user/gluster-subvol/volcreator/apply_xfs_quota.sh /bricks/supervole1b00/brick /mnt/supervole1b00/quota-0-4999.dat
   ```
 - Once the command completes, verify that all quotas have been properly
   created.
   ```shell
-  $ sudo gluster vol quota supervole1b00 list | wc -l
-  5002   # <-- 5000 quotas + 2 header lines
+  $ sudo xfs_quota -x -c 'report -p -a'
   ```
 - Copy the yaml file that contains the PV description to your local machine.
   You will need to use `scp` through the jump host. Assuming the jump host is
