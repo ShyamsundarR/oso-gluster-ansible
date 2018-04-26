@@ -32,6 +32,22 @@ gluster_volumes:
     size: 500G
     device: /dev/xvdc
     group: tag_gluster_group_us_east_1b_c01_g00
+  supervole200:
+    size: 500G
+    device: /dev/xvdb
+    group: tag_gluster_group_us_east_2_c00_g00
+  supervole201:
+    size: 500G
+    device: /dev/xvdb
+    group: tag_gluster_group_us_east_2_c01_g00
+  supervole202:
+    size: 500G
+    device: /dev/xvdc
+    group: tag_gluster_group_us_east_2_c00_g00
+  supervole203:
+    size: 500G
+    device: /dev/xvdc
+    group: tag_gluster_group_us_east_2_c01_g00
   supervol00:
     size: 500G
     device: /dev/xvdb

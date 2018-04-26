@@ -73,7 +73,11 @@ Vagrant.configure("2") do |config|
             "tag_gluster_master_us_east_1b_c00" => ["dummy"],
             "tag_gluster_group_us_east_1b_c00_g00" => ["dummy"],
             "tag_gluster_master_us_east_1b_c01" => ["dummy"],
-            "tag_gluster_group_us_east_1b_c01_g00" => ["dummy"]
+            "tag_gluster_group_us_east_1b_c01_g00" => ["dummy"],
+            "tag_gluster_master_us_east_2_c00" => ["dummy"],
+            "tag_gluster_group_us_east_2_c00_g00" => ["dummy"],
+            "tag_gluster_master_us_east_2_c01" => ["dummy"],
+            "tag_gluster_group_us_east_2_c01_g00" => ["dummy"]
           }
           ansible.limit = "all"
           ansible.playbook = "vagrant.yml"
