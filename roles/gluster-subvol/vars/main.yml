@@ -1,0 +1,2 @@
+subvol_repo: https://github.com/gluster/gluster-subvol.git
+subvol_dir: /root/gluster-subvol
