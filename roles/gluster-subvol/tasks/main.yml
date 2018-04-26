@@ -1,0 +1,60 @@
+# vim: set ts=2 sw=2 et :
+---
+
+- name: Check for required variables
+  fail: msg="Variable {{ item }} must be defined to use this playbook"
+  when: item is undefined
+  with_items:
+  - cluster_master
+  - volume
+  - gluster_volumes
+  - gluster_volumes[volume].group
+
+- name: Preparing to apply subvol config
+  run_once: true
+  pause:
+    prompt: "Starting on volume: {{ volume }} in 30s..."
+    seconds: 30
+
+- set_fact:
+    # Example: serverips: 192.168.1.1:192.168.1.2:192.168.1.3
+    serverips: "{{ groups[gluster_volumes[volume].group] |
+                   map('extract', hostvars, 'ansible_host') |
+                   sort | list | join(':') }}"
+
+- name: Make mount directory
+  file:
+    path: "/mnt/{{ volume }}"
+    state: directory
+
+- name: Mount gluster supervol
+  mount:
+    fstype: glusterfs
+    path: "/mnt/{{ volume }}"
+    src: "localhost:/{{ volume }}"
+    state: mounted
+
+- name: Clone gluster-subvol
+  git:
+    repo: "{{ subvol_repo }}"
+    dest: "{{ subvol_dir }}"
+    update: yes
+
+- name: Create subdirs
+  run_once: true
+  delegate_to: "{{ cluster_master }}"
+  command: "{{ subvol_dir }}/volcreator/creator_xfs_quota.sh {{ serverips }}
+            {{ volume }} /mnt/{{ volume }}/ 1 0 4999"
+  args:
+    # 4999 = 0x1387 ==> /13/87
+    creates: "/mnt/{{ volume }}/13/87"
+
+- name: Get applied quota count
+  shell: "xfs_quota -x -c 'report -p -a' /bricks/{{ volume }} | wc -l"
+  changed_when: false
+  register: qcount
+
+- name: Apply quotas
+  command: "{{ subvol_dir }}/volcreator/apply_xfs_quota.sh
+            /bricks/{{ volume }}/brick /mnt/{{ volume }}/quota-0-4999.dat"
+  when: qcount.stdout|int < 5000
