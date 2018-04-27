@@ -20,8 +20,8 @@
   tasks:
   - include_role:
       name: gluster-secure-shared-storage
-    with_items: "{{ gluster_volumes }}"
-    when: "gluster_volumes is defined and
-           inventory_hostname in groups[gluster_volumes[volume].group]"
+    with_items: "{{ cluster_member_group }}"
+    when: "cluster_member_group is defined and
+           inventory_hostname in groups[member_group]"
     loop_control:
-      loop_var: volume
+      loop_var: member_group

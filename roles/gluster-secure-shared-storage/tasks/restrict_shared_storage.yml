@@ -17,12 +17,6 @@
     vars:
       gl_gluster_hosts: "{{ groups[hostvars[inventory_hostname].cluster_member_group] | difference(play_hosts) }}"
 
-  - name: Check if additional hosts that are not part of the gluster cluster are not part of the play
-    fail: msg="More hosts than ones that form the gluster cluster are part of the play, additional {{ gl_this_play_hosts }}"
-    when: gl_this_play_hosts|length != 0
-    vars:
-      gl_this_play_hosts: "{{ play_hosts | difference(groups[hostvars[inventory_hostname].cluster_member_group]) }}"
-
 # We unmount the shared storage volume using systemd and via a manual umount as,
 #   - Either fstab mounted it, in which case stopping it via systemd will not
 #     work
