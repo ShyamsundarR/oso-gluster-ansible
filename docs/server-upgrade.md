@@ -63,7 +63,7 @@ fully upgrade the server (all packages).
     and reboot:
 
     ```shell
-  # Gluster should already be stopped!
+    # Gluster should already be stopped!
     $ sudo shutdown -r now
     ```
 
