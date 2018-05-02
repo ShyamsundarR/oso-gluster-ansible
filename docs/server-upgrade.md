@@ -20,6 +20,15 @@ fully upgrade the server (all packages).
   for security-only updates or `sudo yum updateinfo list` for all. If the
   desired update type includes any kernel or Gluster packages, the above advice
   applies.
+- Run the upgrade commands through `screen` to avoid problems w/ ssh
+  disconnection.
+  - To start or reconnect to screen:
+
+    ```shell
+    $ screen -xR
+    ```
+
+  - To detach: `ctrl-a d`
 - Pre-flight
   - Ensure all bricks are online: `sudo gluster vol status` should show pids for
     all bricks in each volume
@@ -51,12 +60,24 @@ fully upgrade the server (all packages).
     $ sudo pkill glusterfsd
     ```
 
+    Then verify Gluster is stopped:
+
+    ```shell
+    $ ps ax | grep gluster
+    ```
+
   - Perform the update:
 
     ```shell
     $ sudo yum update
     # ... or ...
     $ sudo yum update --security
+    ```
+
+  - Make sure all data is safely written to disk:
+
+    ```shell
+    $ sync
     ```
 
   - If the kernel or Gluster was updated, ensure Gluster is stopped (see above)
@@ -68,6 +89,13 @@ fully upgrade the server (all packages).
     ```
 
 - Post
+  - Ensure `shared_storage` was properly re-mounted
+
+    ```shell
+    $ grep shared_storage /proc/mounts
+    ip-192-168-0-11.us-east-2.compute.internal:/gluster_shared_storage /run/gluster/shared_storage fuse.glusterfs rw,relatime,user_id=0,group_id=0,default_permissions,allow_other,max_read=131072 0 0
+    ```
+
   - Recheck gluster and wait for pending heals to complete
 
     ```shell
