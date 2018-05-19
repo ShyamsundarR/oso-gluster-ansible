@@ -16,8 +16,11 @@ function gethost {
 
 remotehost=$(gethost "$@")
 
+# Collect samples for between 12 and 48 hrs before restarting
+samples=$((720 + RANDOM%2160))
+
 if pminfo -h "$remotehost" gluster >& /dev/null; then
-    pcp2zabbix "$@" gluster
+    pcp2zabbix "$@" gluster -s $samples
 else
-    pcp2zabbix "$@"
+    pcp2zabbix "$@" -s $samples
 fi
